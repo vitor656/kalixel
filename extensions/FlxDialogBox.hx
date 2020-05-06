@@ -3,12 +3,13 @@ package kalixel.extensions;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxSoundAsset;
 import flixel.util.FlxColor;
 
-class FlxDialogBox extends FlxTypedGroup<FlxSprite>
+class FlxDialogBox extends FlxTypedSpriteGroup<FlxSprite>
 {
 	var _newLineSet:Bool = false;
 	var _timeToNextLineCounter:Float;
@@ -50,11 +51,13 @@ class FlxDialogBox extends FlxTypedGroup<FlxSprite>
 		else
 		{
 			makeSolidDialogBox(FlxG.width - (Std.int(FlxG.width / 5)), Std.int(FlxG.height / 2) - Std.int(FlxG.height / 5), FlxColor.BLACK);
-			centerOnScreenBottom();
 		}
 
 		add(box);
 		add(typeTextObject);
+
+		if (backgroundBox == null)
+			centerOnScreenBottom();
 
 		if (dialogLines != null)
 			this.dialogLines = dialogLines;
@@ -71,7 +74,7 @@ class FlxDialogBox extends FlxTypedGroup<FlxSprite>
 	{
 		if (box != null && typeTextObject != null)
 		{
-			setupTypetext();
+			setupNextLine();
 		}
 
 		if (typeTextObject.isTyping)
@@ -124,6 +127,7 @@ class FlxDialogBox extends FlxTypedGroup<FlxSprite>
 			_onCompleteDialogTriggered = false;
 		}
 
+		box.visible = true;
 		typeTextObject.start();
 		dialogCompleted = false;
 	}
@@ -137,51 +141,32 @@ class FlxDialogBox extends FlxTypedGroup<FlxSprite>
 
 		box = new FlxSprite();
 		box.makeGraphic(width, height, color);
+		box.visible = false;
 
 		setupTypetext();
-
-		add(box);
-		add(typeTextObject);
 	}
 
 	public function centerOnScreenBottom()
 	{
-		if (box != null)
+		if (members.length > 0)
 		{
-			box.screenCenter();
-			box.y = FlxG.height - box.height - padding;
-
-			_referenceX = box.x;
-			_referenceY = box.y;
+			screenCenter();
+			y = FlxG.height - height - padding;
 		}
 	}
 
 	public function centerOnScreenTop()
 	{
-		if (box != null)
+		if (members.length > 0)
 		{
-			box.screenCenter();
-			box.y = padding;
-
-			_referenceX = box.x;
-			_referenceY = box.y;
+			screenCenter();
+			y = padding;
 		}
 	}
 
 	public function setupDialogLines(textLines:Array<String>)
 	{
 		dialogLines = textLines;
-	}
-
-	public function setPosition(x:Float, y:Float)
-	{
-		if (box != null)
-		{
-			box.setPosition(x, y);
-
-			_referenceX = box.x;
-			_referenceY = box.y;
-		}
 	}
 
 	function continueTypingOnNextPage()
@@ -209,7 +194,7 @@ class FlxDialogBox extends FlxTypedGroup<FlxSprite>
 			_currentLine++;
 			_newLineSet = false;
 
-			setupTypetext();
+			setupNextLine();
 			start();
 		}
 		else
@@ -238,15 +223,18 @@ class FlxDialogBox extends FlxTypedGroup<FlxSprite>
 				typeTextObject.fieldWidth = Std.int(box.width) - (padding * 2);
 				typeTextObject.autoSize = false;
 				typeTextObject.lineSpacing = 4;
+			}
+		}
+	}
 
-				if (dialogLines != null)
-				{
-					if (typeTextObject.completeText != dialogLines[_currentLine] && !_newLineSet)
-					{
-						typeTextObject.completeText = dialogLines[_currentLine];
-						_newLineSet = true;
-					}
-				}
+	function setupNextLine()
+	{
+		if (dialogLines != null)
+		{
+			if (typeTextObject.completeText != dialogLines[_currentLine] && !_newLineSet)
+			{
+				typeTextObject.completeText = dialogLines[_currentLine];
+				_newLineSet = true;
 			}
 		}
 	}
